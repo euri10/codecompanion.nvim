@@ -172,4 +172,115 @@ T["Tool output"]["Folds"]["does not fold single line output but applies extmarks
   expect.reference_screenshot(child.get_screenshot())
 end
 
+T["Tool output"]["Folds"]["highlight"] = new_set()
+
+---Helper that writes a tool message into a chat buffer with folds enabled and returns
+---the fold summary entry for the first tool fold in the buffer.
+---@param c MiniTest.child
+---@param tool_output string Content passed to add_tool_output
+---@param status string|nil Optional status passed as opts.status
+---@return table { summary: table|nil, chunks: table[] }
+local function get_fold_highlight(c, tool_output, status)
+  enable_folds(c)
+  set_buffer_contents(c, "What is the weather?")
+  tool_call(c)
+
+  local result = c.lua(string.format(
+    [[
+      local output = %q
+      local status = %s
+      local opts = status ~= nil and { status = status } or nil
+
+      _G.chat:add_tool_output(_G.tool, output, nil, opts)
+
+      -- Wait for the scheduled fold creation
+      vim.wait(200, function() return false end)
+
+      local bufnr = _G.chat.bufnr
+      local Folds = require("codecompanion.interactions.chat.ui.folds")
+      local summaries = Folds.fold_summaries[bufnr] or {}
+
+      -- Find the first tool fold (fold_summaries[bufnr] is keyed by 0-based line number)
+      local summary = nil
+      for _, v in pairs(summaries) do
+        if type(v) == "table" and v.type == "tool" then
+          summary = v
+          break
+        end
+      end
+
+      -- Get the highlight chunks for this fold
+      local chunks = {}
+      if summary then
+        chunks = Folds._format_fold_text(summary.content, "tool", { status = summary.status })
+      end
+
+      return { summary = summary, chunks = chunks }
+    ]],
+    tool_output,
+    status ~= nil and string.format("%q", status) or "nil"
+  ))
+
+  return result
+end
+
+T["Tool output"]["Folds"]["highlight"]["success status uses green highlight group"] = function()
+  local result = get_fold_highlight(child, "Created file `foo.lua`\nline two\nline three", "success")
+
+  h.eq(result.summary ~= nil, true, "Expected a fold summary entry")
+  h.eq(result.summary.status, "success")
+  -- The icon chunk and text chunk should both use the success highlight groups
+  h.eq(result.chunks[1][2], "CodeCompanionChatToolSuccessIcon")
+  h.eq(result.chunks[2][2], "CodeCompanionChatToolSuccess")
+end
+
+T["Tool output"]["Folds"]["highlight"]["error status uses red highlight group"] = function()
+  local result = get_fold_highlight(child, "Something went wrong\nline two\nline three", "error")
+
+  h.eq(result.summary ~= nil, true, "Expected a fold summary entry")
+  h.eq(result.summary.status, "error")
+  h.eq(result.chunks[1][2], "CodeCompanionChatToolFailureIcon")
+  h.eq(result.chunks[2][2], "CodeCompanionChatToolFailure")
+end
+
+T["Tool output"]["Folds"]["highlight"]["cancelled status uses red highlight group"] = function()
+  local result = get_fold_highlight(child, "The user declined\nline two\nline three", "cancelled")
+
+  h.eq(result.summary ~= nil, true, "Expected a fold summary entry")
+  h.eq(result.summary.status, "cancelled")
+  h.eq(result.chunks[1][2], "CodeCompanionChatToolFailureIcon")
+  h.eq(result.chunks[2][2], "CodeCompanionChatToolFailure")
+end
+
+T["Tool output"]["Folds"]["highlight"]["success status overrides failure word in content"] = function()
+  -- Content contains "error" which would trigger red via failure_words if status were absent
+  local result = get_fold_highlight(child, "Handled error_handler.lua successfully\nline two\nline three", "success")
+
+  h.eq(result.summary ~= nil, true, "Expected a fold summary entry")
+  h.eq(result.summary.status, "success")
+  -- Must be green despite the word "error" appearing in content
+  h.eq(result.chunks[1][2], "CodeCompanionChatToolSuccessIcon")
+  h.eq(result.chunks[2][2], "CodeCompanionChatToolSuccess")
+end
+
+T["Tool output"]["Folds"]["highlight"]["no status falls back to failure_words scan for errors"] = function()
+  -- No status provided; content contains a failure word => should still be red (backward compat)
+  local result = get_fold_highlight(child, "failed to run\nline two\nline three", nil)
+
+  h.eq(result.summary ~= nil, true, "Expected a fold summary entry")
+  h.eq(result.summary.status, nil)
+  h.eq(result.chunks[1][2], "CodeCompanionChatToolFailureIcon")
+  h.eq(result.chunks[2][2], "CodeCompanionChatToolFailure")
+end
+
+T["Tool output"]["Folds"]["highlight"]["no status falls back to failure_words scan for success"] = function()
+  -- No status provided; content has no failure words => should be green
+  local result = get_fold_highlight(child, "All done\nline two\nline three", nil)
+
+  h.eq(result.summary ~= nil, true, "Expected a fold summary entry")
+  h.eq(result.summary.status, nil)
+  h.eq(result.chunks[1][2], "CodeCompanionChatToolSuccessIcon")
+  h.eq(result.chunks[2][2], "CodeCompanionChatToolSuccess")
+end
+
 return T

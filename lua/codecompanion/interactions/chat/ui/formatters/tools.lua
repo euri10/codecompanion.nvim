@@ -67,6 +67,7 @@ function Tools:format(message, opts, state)
     start_offset = content_start_index - 1, -- 0-based: first content line
     end_offset = content_start_index + #content_lines - 2, -- 0-based: last content line
     first_line = content_lines[1] or "",
+    status = opts.fold_status,
   }
 
   return lines, fold_info

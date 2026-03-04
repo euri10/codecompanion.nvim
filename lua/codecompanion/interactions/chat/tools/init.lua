@@ -87,7 +87,12 @@ function Tools:_handle_tool_error(tool, error_message)
     available_tools_msg = "No tools available"
   end
 
-  self.chat:add_tool_output(tool_call, string.format("Tool `%s` not found. %s", name, available_tools_msg), "")
+  self.chat:add_tool_output(
+    tool_call,
+    string.format("Tool `%s` not found. %s", name, available_tools_msg),
+    "",
+    { status = "error" }
+  )
   return utils.fire("ToolsFinished", { bufnr = self.bufnr })
 end
 

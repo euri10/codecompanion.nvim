@@ -172,7 +172,7 @@ return {
         args.content or ""
       )
 
-      chat:add_tool_output(self, llm_output, result_msg)
+      chat:add_tool_output(self, llm_output, result_msg, { status = "success" })
     end,
 
     ---@param self CodeCompanion.Tool.CreateFile
@@ -184,7 +184,7 @@ return {
       log:debug("[Create File Tool] Error output: %s", stderr)
 
       local error_output = fmt([[%s]], errors)
-      chat:add_tool_output(self, error_output)
+      chat:add_tool_output(self, error_output, nil, { status = "error" })
     end,
 
     ---Rejection message back to the LLM

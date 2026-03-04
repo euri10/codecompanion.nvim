@@ -47,7 +47,7 @@ local tool_output = {
       self.name,
       output_for_user
     )
-    chat:add_tool_output(self, output, for_user)
+    chat:add_tool_output(self, output, for_user, { status = "success" })
   end,
 
   ---@param self CodeCompanion.Tool.MCPToolBridge
@@ -68,7 +68,7 @@ Arguments:
       err_msg,
       vim.inspect(self.args)
     )
-    chat:add_tool_output(self, "MCP Tool execution failed:\n" .. err_msg, for_user)
+    chat:add_tool_output(self, "MCP Tool execution failed:\n" .. err_msg, for_user, { status = "error" })
   end,
 
   ---The message which is shared with the user when asking for their approval

@@ -52,7 +52,7 @@ function Folds.fold_text()
     return Folds._format_fold_text("Unknown", "context")
   end
 
-  return Folds._format_fold_text(fold_data.content, fold_data.type)
+  return Folds._format_fold_text(fold_data.content, fold_data.type, { status = fold_data.status })
 end
 
 ---Format fold text based on type
@@ -69,15 +69,28 @@ function Folds._format_fold_text(content, fold_type, opts)
     local icon_conf = icons.tool_success or ""
     local icon_hl = "CodeCompanionChatToolSuccessIcon"
     local summary_hl = "CodeCompanionChatToolSuccess"
-    local failure_words = config.interactions.chat.tools.opts.folds.failure_words or {}
-    for _, word in ipairs(failure_words) do
-      if content:lower():find(word) then
-        icon_conf = icons.tool_failure or ""
-        icon_hl = "CodeCompanionChatToolFailureIcon"
-        summary_hl = "CodeCompanionChatToolFailure"
-        break
+
+    local is_failure
+    if opts.status ~= nil then
+      -- Use explicit status when available
+      is_failure = opts.status == "error" or opts.status == "cancelled" or opts.status == "failed"
+    else
+      -- Fallback: scan content for failure words
+      local failure_words = config.interactions.chat.tools.opts.folds.failure_words or {}
+      for _, word in ipairs(failure_words) do
+        if content:lower():find(word) then
+          is_failure = true
+          break
+        end
       end
     end
+
+    if is_failure then
+      icon_conf = icons.tool_failure or ""
+      icon_hl = "CodeCompanionChatToolFailureIcon"
+      summary_hl = "CodeCompanionChatToolFailure"
+    end
+
     table.insert(chunks, { icon_conf, icon_hl })
     if not opts.show_icon_only then
       table.insert(chunks, { content, summary_hl })
@@ -143,6 +156,7 @@ function Folds:_create(bufnr, start_row, end_row, fold_config)
   self.fold_summaries[bufnr][start_row] = {
     content = fold_config.content,
     type = fold_config.type,
+    status = fold_config.status,
   }
 
   -- Only add inline extmarks for tool/context. Reasoning gets no extmarks.
@@ -155,7 +169,11 @@ function Folds:_create(bufnr, start_row, end_row, fold_config)
 
   if ns_to_use then
     api.nvim_buf_set_extmark(bufnr, ns_to_use, start_row, 0, {
-      virt_text = self._format_fold_text(fold_config.content or "", fold_config.type, { show_icon_only = true }),
+      virt_text = self._format_fold_text(
+        fold_config.content or "",
+        fold_config.type,
+        { show_icon_only = true, status = fold_config.status }
+      ),
       virt_text_pos = "inline",
       priority = 200,
     })
@@ -207,7 +225,8 @@ end
 ---@param start_row number (0-based)
 ---@param end_row number (0-based)
 ---@param foldtext string
-function Folds:create_tool_fold(bufnr, start_row, end_row, foldtext)
+---@param status? string The tool execution status ("success", "error", "cancelled")
+function Folds:create_tool_fold(bufnr, start_row, end_row, foldtext, status)
   if not config.interactions.chat.tools.opts.folds.enabled then
     return
   end
@@ -216,7 +235,7 @@ function Folds:create_tool_fold(bufnr, start_row, end_row, foldtext)
   if start_row == end_row then
     -- Still add the extmark for visual indication
     api.nvim_buf_set_extmark(bufnr, CONSTANTS.NS_FOLD_TOOLS, start_row, 0, {
-      virt_text = self._format_fold_text(foldtext, "tool", { show_icon_only = true }),
+      virt_text = self._format_fold_text(foldtext, "tool", { show_icon_only = true, status = status }),
       virt_text_pos = "inline",
       priority = 200,
     })
@@ -226,6 +245,7 @@ function Folds:create_tool_fold(bufnr, start_row, end_row, foldtext)
   self:_create(bufnr, start_row, end_row, {
     type = "tool",
     content = foldtext,
+    status = status,
   })
 end
 

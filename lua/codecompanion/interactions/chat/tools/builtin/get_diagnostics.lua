@@ -197,7 +197,7 @@ return {
       local chat = meta.tools.chat
       local llm_output = vim.iter(stdout):flatten():join("\n")
       local display_path = vim.fn.fnamemodify(self.args.filepath, ":.")
-      chat:add_tool_output(self, llm_output, fmt("Got diagnostics for `%s`", display_path))
+      chat:add_tool_output(self, llm_output, fmt("Got diagnostics for `%s`", display_path), { status = "success" })
     end,
 
     ---@param self CodeCompanion.Tool.GetDiagnostics
@@ -207,7 +207,7 @@ return {
       local chat = meta.tools.chat
       local errors = vim.iter(stderr):flatten():join("\n")
       log:debug("[Get Diagnostics Tool] Error output: %s", stderr)
-      chat:add_tool_output(self, errors)
+      chat:add_tool_output(self, errors, nil, { status = "error" })
     end,
 
     ---Rejection message back to the LLM

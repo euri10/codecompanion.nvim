@@ -1635,8 +1635,9 @@ end
 ---@param tool table The Tool that was executed
 ---@param for_llm string The output to share with the LLM
 ---@param for_user? string The output to share with the user. If empty will use the LLM's output
+---@param opts? { status?: string } Optional options, e.g. status = "success" | "error" | "cancelled"
 ---@return nil
-function Chat:add_tool_output(tool, for_llm, for_user)
+function Chat:add_tool_output(tool, for_llm, for_user, opts)
   local tool_call = tool.function_call
   log:debug("Tool output: %s", tool_call)
 
@@ -1668,11 +1669,13 @@ function Chat:add_tool_output(tool, for_llm, for_user)
     return
   end
 
+  opts = opts or {}
   self:add_buf_message({
     role = config.constants.LLM_ROLE,
     content = (for_user or for_llm),
   }, {
     type = self.MESSAGE_TYPES.TOOL_MESSAGE,
+    fold_status = opts.status,
   })
 end
 

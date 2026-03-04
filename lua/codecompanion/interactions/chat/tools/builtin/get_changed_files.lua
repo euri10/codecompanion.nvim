@@ -144,7 +144,7 @@ return {
     success = function(self, stdout, meta)
       local chat = meta.tools.chat
       local output = vim.iter(stdout):flatten():join("\n")
-      chat:add_tool_output(self, output, "Reading changed files")
+      chat:add_tool_output(self, output, "Reading changed files", { status = "success" })
     end,
 
     ---@param self CodeCompanion.Tool.GetChangedFiles
@@ -153,7 +153,7 @@ return {
     error = function(self, stderr, meta)
       local chat = meta.tools.chat
       local errors = vim.iter(stderr):flatten():join("\n")
-      chat:add_tool_output(self, errors)
+      chat:add_tool_output(self, errors, nil, { status = "error" })
     end,
 
     ---Rejection message back to the LLM

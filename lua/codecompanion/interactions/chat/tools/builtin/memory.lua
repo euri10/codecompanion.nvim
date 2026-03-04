@@ -434,7 +434,7 @@ return {
         user_output = fmt("Renamed `%s` to `%s`", cmd.old_path, cmd.new_path)
       end
 
-      chat:add_tool_output(self, llm_output, user_output)
+      chat:add_tool_output(self, llm_output, user_output, { status = "success" })
     end,
 
     ---@param self CodeCompanion.Tool.Memory
@@ -445,7 +445,7 @@ return {
       local errors = stderr.data or "Unknown error"
       log:debug("[Memory Tool] Error output: %s", errors)
 
-      chat:add_tool_output(self, errors)
+      chat:add_tool_output(self, errors, nil, { status = "error" })
     end,
 
     ---Rejection message back to the LLM

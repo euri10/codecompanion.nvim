@@ -308,7 +308,7 @@ function Builder:_write_to_buffer(lines, opts, fold_info, state)
     local fold_start = insert_line + fold_info.start_offset
     local fold_end = insert_line + fold_info.end_offset
     vim.schedule(function()
-      self.chat.ui.folds:create_tool_fold(self.chat.bufnr, fold_start, fold_end, fold_info.first_line)
+      self.chat.ui.folds:create_tool_fold(self.chat.bufnr, fold_start, fold_end, fold_info.first_line, fold_info.status)
     end)
   end
 

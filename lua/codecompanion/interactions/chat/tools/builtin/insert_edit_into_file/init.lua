@@ -301,7 +301,7 @@ return {
       if stderr then
         local chat = meta.tools.chat
         local errors = vim.iter(stderr):flatten():join("\n")
-        chat:add_tool_output(self, "**Error:**\n" .. errors)
+        chat:add_tool_output(self, "**Error:**\n" .. errors, nil, { status = "error" })
       end
     end,
 
@@ -323,7 +323,7 @@ return {
       if stdout then
         local chat = meta.tools.chat
         local llm_output = vim.iter(stdout):flatten():join("\n")
-        chat:add_tool_output(self, llm_output)
+        chat:add_tool_output(self, llm_output, nil, { status = "success" })
       end
     end,
   },

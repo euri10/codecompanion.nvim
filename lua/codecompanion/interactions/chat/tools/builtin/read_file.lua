@@ -193,7 +193,7 @@ return {
       local end_line = self.args.end_line_number_base_zero
       local display_path = vim.fn.fnamemodify(self.args.filepath, ":.")
       local range_text = end_line == -1 and fmt("(%d - end)", start_line) or fmt("(%d - %d)", start_line, end_line)
-      chat:add_tool_output(self, llm_output, fmt("Read file `%s` %s", display_path, range_text))
+      chat:add_tool_output(self, llm_output, fmt("Read file `%s` %s", display_path, range_text), { status = "success" })
     end,
 
     ---@param self CodeCompanion.Tool.ReadFile
@@ -205,7 +205,7 @@ return {
       local errors = vim.iter(stderr):flatten():join("\n")
       log:debug("[Read File Tool] Error output: %s", stderr)
 
-      chat:add_tool_output(self, errors)
+      chat:add_tool_output(self, errors, nil, { status = "error" })
     end,
 
     ---Rejection message back to the LLM

@@ -103,7 +103,7 @@ return {
       local llm_output = fmt([[%s]], table.concat(content, "\n"))
       local user_output = fmt([[Searched for `%s`, %d result(s)]], meta.cmd.query, length)
 
-      chat:add_tool_output(self, llm_output, user_output)
+      chat:add_tool_output(self, llm_output, user_output, { status = "success" })
     end,
 
     ---@param self CodeCompanion.Tool.WebSearch
@@ -115,7 +115,7 @@ return {
 
       local error_output = fmt([[Error searching for `%s`]], args.query)
 
-      chat:add_tool_output(self, error_output)
+      chat:add_tool_output(self, error_output, nil, { status = "error" })
     end,
   },
 }

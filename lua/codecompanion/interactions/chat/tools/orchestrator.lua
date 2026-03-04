@@ -22,8 +22,9 @@ end
 ---@param exec CodeCompanion.Tools.Orchestrator
 ---@param llm_message string
 ---@param user_message? string
-local send_response_to_chat = function(exec, llm_message, user_message)
-  exec.tools.chat:add_tool_output(exec.tool, llm_message, user_message)
+---@param opts? table
+local send_response_to_chat = function(exec, llm_message, user_message, opts)
+  exec.tools.chat:add_tool_output(exec.tool, llm_message, user_message, opts)
 end
 
 ---Execute a shell command with platform-specific handling
@@ -162,7 +163,8 @@ function Orchestrator:_setup_handlers()
         send_response_to_chat(
           self,
           fmt("The user cancelled the execution of the %s tool", self.tool.name),
-          fmt("Cancelled `%s`", self.tool.name)
+          fmt("Cancelled `%s`", self.tool.name),
+          { status = "cancelled" }
         )
       end
     end,
@@ -189,7 +191,7 @@ function Orchestrator:_setup_handlers()
           { cmd = cmd, tools = self.tools }
         )
       else
-        send_response_to_chat(self, fmt("Error calling `%s`", self.tool.name))
+        send_response_to_chat(self, fmt("Error calling `%s`", self.tool.name), nil, { status = "error" })
       end
     end,
 
@@ -217,7 +219,7 @@ function Orchestrator:_setup_handlers()
           rejection = rejection .. fmt(': "%s"', opts.reason)
         end
         -- If no handler is set then return a default message
-        send_response_to_chat(self, rejection)
+        send_response_to_chat(self, rejection, nil, { status = "cancelled" })
       end
     end,
 
@@ -233,7 +235,7 @@ function Orchestrator:_setup_handlers()
           { cmd = cmd, tools = self.tools }
         )
       else
-        send_response_to_chat(self, fmt("Executed `%s`", self.tool.name))
+        send_response_to_chat(self, fmt("Executed `%s`", self.tool.name), nil, { status = "success" })
       end
     end,
   }
@@ -389,7 +391,9 @@ function Orchestrator:error(args)
     if self.tool and self.tool.function_call then
       self.tools.chat:add_tool_output(
         self.tool,
-        string.format("Internal error with `%s` tool: %s", self.tool.name, err)
+        string.format("Internal error with `%s` tool: %s", self.tool.name, err),
+        nil,
+        { status = "error" }
       )
     end
   end
@@ -418,7 +422,12 @@ function Orchestrator:success(args)
   if not ok then
     log:error("Internal error with the %s success handler: %s", self.tool.name, err)
     if self.tool and self.tool.function_call then
-      self.tools.chat:add_tool_output(self.tool, string.format("Internal error with `%s` tool", self.tool.name))
+      self.tools.chat:add_tool_output(
+        self.tool,
+        string.format("Internal error with `%s` tool", self.tool.name),
+        nil,
+        { status = "error" }
+      )
     end
   end
 end

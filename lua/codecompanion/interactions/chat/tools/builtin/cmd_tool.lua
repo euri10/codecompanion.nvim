@@ -65,7 +65,7 @@ local function cmd_tool(spec)
         local llm_output = fmt(output, fmt("There was an error running the `%s` command:", cmd_string), errors)
         local user_output = fmt(output, fmt("`%s` error", cmd_string), errors)
 
-        chat:add_tool_output(self, llm_output, user_output)
+        chat:add_tool_output(self, llm_output, user_output, { status = "error" })
       end
     end,
 
@@ -103,9 +103,14 @@ local function cmd_tool(spec)
           spec.build_cmd(self.args),
           output
         )
-        return chat:add_tool_output(self, message)
+        return chat:add_tool_output(self, message, nil, { status = "success" })
       end
-      return chat:add_tool_output(self, fmt("There was no output from the %s tool", spec.name))
+      return chat:add_tool_output(
+        self,
+        fmt("There was no output from the %s tool", spec.name),
+        nil,
+        { status = "success" }
+      )
     end,
   }
 

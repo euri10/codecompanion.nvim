@@ -220,7 +220,7 @@ return {
     success = function(self, stdout, meta)
       local chat = meta.tools.chat
       local llm_output = vim.iter(stdout):flatten():join("\n")
-      chat:add_tool_output(self, llm_output, "User answered questions")
+      chat:add_tool_output(self, llm_output, "User answered questions", { status = "success" })
     end,
 
     ---@param self CodeCompanion.Tool.AskQuestions
@@ -230,7 +230,7 @@ return {
       local chat = meta.tools.chat
       local errors = vim.iter(stderr):flatten():join("\n")
       log:debug("[Ask Questions Tool] Error: %s", stderr)
-      chat:add_tool_output(self, errors)
+      chat:add_tool_output(self, errors, nil, { status = "error" })
     end,
   },
 }

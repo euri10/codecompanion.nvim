@@ -125,7 +125,7 @@ return {
       local llm_output = fmt([[<attachment url="%s">%s</attachment>]], args.url, content)
       local user_output = fmt("Fetched content from `%s`", args.url)
 
-      chat:add_tool_output(self, llm_output, user_output)
+      chat:add_tool_output(self, llm_output, user_output, { status = "success" })
     end,
 
     ---@param self CodeCompanion.Tool.FetchWebpage
@@ -145,7 +145,7 @@ return {
         args.url,
         errors
       )
-      chat:add_tool_output(self, error_output)
+      chat:add_tool_output(self, error_output, nil, { status = "error" })
     end,
   },
 }
