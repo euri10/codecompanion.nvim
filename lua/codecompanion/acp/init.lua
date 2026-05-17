@@ -781,10 +781,41 @@ function Connection:handle_available_commands_update(session_id, commands)
   acp_commands.register_commands(session_id, commands)
 end
 
+local function config_option_key(option)
+  return option.id or option.category or option.name
+end
+
 ---Store raw configOptions from the agent
 ---@param config_options table[] Array of SessionConfigOption
-function Connection:_apply_config_options(config_options)
-  self._config_options = config_options
+---@param opts? { merge?: boolean }
+function Connection:_apply_config_options(config_options, opts)
+  opts = opts or {}
+
+  if opts.merge and not vim.tbl_isempty(self._config_options) then
+    local merged = vim.deepcopy(self._config_options)
+    local index = {}
+
+    for i, option in ipairs(merged) do
+      local key = config_option_key(option)
+      if key then
+        index[key] = i
+      end
+    end
+
+    for _, option in ipairs(config_options) do
+      local key = config_option_key(option)
+      if key and index[key] then
+        merged[index[key]] = option
+      else
+        table.insert(merged, option)
+      end
+    end
+
+    self._config_options = merged
+  else
+    self._config_options = config_options
+  end
+
   log:debug("[acp] Config options: %s", config_options)
 end
 
@@ -951,7 +982,7 @@ function Connection:set_config_option(config_id, value)
   end
 
   if result.configOptions then
-    self:_apply_config_options(result.configOptions)
+    self:_apply_config_options(result.configOptions, { merge = true })
   end
 
   log:debug("[acp::set_config_option] Changed %s to %s", config_id, value)

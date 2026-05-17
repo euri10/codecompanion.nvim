@@ -271,6 +271,53 @@ T["ACP Connection"]["session/new stores config options metadata"] = function()
   h.eq(result.models.availableModels[1].modelId, "claude-opus")
 end
 
+T["ACP Connection"]["set_config_option merges partial config options"] = function()
+  local result = child.lua([[
+    local connection = create_test_connection()
+    connection.session_id = "session-1"
+    connection._config_options = {
+      {
+        type = "select",
+        id = "model",
+        name = "Model",
+        category = "model",
+        currentValue = "default",
+        options = { { value = "default", name = "Default" }, { value = "opus", name = "Opus" } },
+      },
+      {
+        type = "select",
+        id = "mode",
+        name = "Mode",
+        category = "mode",
+        currentValue = "default",
+        options = { { value = "default", name = "Default" }, { value = "bypass", name = "Bypass Permissions" } },
+      },
+    }
+    function connection:send_rpc_request(method, params)
+      return {
+        configOptions = {
+          {
+            type = "select",
+            id = "model",
+            name = "Model",
+            category = "model",
+            currentValue = params.value,
+            options = { { value = "default", name = "Default" }, { value = "opus", name = "Opus" } },
+          },
+        },
+      }
+    end
+
+    connection:set_config_option("model", "opus")
+    return connection._config_options
+  ]])
+
+  h.eq(2, #result)
+  h.eq("opus", result[1].currentValue)
+  h.eq("mode", result[2].id)
+  h.eq("default", result[2].currentValue)
+end
+
 T["ACP Connection"]["falls back to session/new if session/load fails"] = function()
   local result = child.lua([[
     local calls = {}

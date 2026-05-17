@@ -101,6 +101,8 @@ function ACPHandler:ensure_session()
   end
 
   if conn.session_id then
+    require("codecompanion.interactions.chat.acp.defaults").apply(self.chat.adapter, conn)
+    self.chat:update_metadata()
     return true
   end
 
@@ -112,9 +114,8 @@ function ACPHandler:ensure_session()
   local acp_commands = require("codecompanion.interactions.chat.acp.commands")
   acp_commands.link_buffer_to_session(self.chat.bufnr, conn.session_id)
 
-  self.chat:update_metadata()
-
   require("codecompanion.interactions.chat.acp.defaults").apply(self.chat.adapter, conn)
+  self.chat:update_metadata()
 
   return true
 end
