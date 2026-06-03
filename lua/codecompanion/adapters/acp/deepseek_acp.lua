@@ -43,13 +43,6 @@ return {
       return true
     end,
 
-    ---CodeWhale supports CLI-managed auth and DEEPSEEK_API_KEY on process start.
-    ---@param self CodeCompanion.ACPAdapter
-    ---@return boolean
-    auth = function(self)
-      return true
-    end,
-
     ---@param self CodeCompanion.ACPAdapter
     ---@param messages table
     ---@param capabilities table
