@@ -14,7 +14,7 @@ return {
   },
   commands = {
     default = {
-      "codewhale",
+      "codewhale-tui",
       "serve",
       "--acp",
     },
