@@ -62,6 +62,7 @@ return {
       },
     },
     acp = {
+      deepseek_acp = "deepseek_acp",
       test_acp = {
         name = "test_acp",
         type = "acp",

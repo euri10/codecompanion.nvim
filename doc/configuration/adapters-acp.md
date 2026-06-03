@@ -302,6 +302,34 @@ To use [Cline CLI](https://cline.bot/cli) within CodeCompanion, you'll need to t
 3. Select the `cline_cli` adapter in your chat buffer
 
 
+## Setup: DeepSeek ACP
+
+To use [CodeWhale](https://github.com/Hmbown/CodeWhale) as a DeepSeek ACP adapter in CodeCompanion:
+
+1. Install `codewhale`
+2. Authenticate with either `codewhale auth set --provider deepseek` or a `DEEPSEEK_API_KEY`
+3. Select the `deepseek_acp` adapter in your chat buffer
+
+If you prefer to pass the API key via your CodeCompanion config, extend the adapter like this:
+
+```lua
+require("codecompanion").setup({
+  adapters = {
+    acp = {
+      deepseek_acp = function()
+        return require("codecompanion.adapters").extend("deepseek_acp", {
+          env = {
+            DEEPSEEK_API_KEY = "my-api-key",
+          },
+        })
+      end,
+    },
+  },
+})
+```
+
+CodeCompanion starts CodeWhale with `codewhale serve --acp`, so you don't need to run the ACP server manually.
+
 ## Setup: Codex
 
 To use OpenAI's [Codex](https://openai.com/codex/), install an ACP-compatible adapter like [this](https://github.com/zed-industries/codex-acp) one from [Zed](https://zed.dev).

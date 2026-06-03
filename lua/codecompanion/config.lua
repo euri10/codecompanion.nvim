@@ -42,6 +42,7 @@ local defaults = {
       cline_cli = "cline_cli",
       codex = "codex",
       cursor_cli = "cursor_cli",
+      deepseek_acp = "deepseek_acp",
       copilot_acp = "copilot_acp",
       gemini_cli = "gemini_cli",
       goose = "goose",
