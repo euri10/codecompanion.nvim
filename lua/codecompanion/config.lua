@@ -507,6 +507,7 @@ If you are providing code changes, use the insert_edit_into_file tool (if availa
           opts = {
             contains_code = false,
             max_sessions = 500,
+            provider = providers.pickers, -- telescope|fzf_lua|mini_pick|snacks|default
           },
         },
         ["rules"] = {
