@@ -97,7 +97,6 @@ local providers = {
   ---@param SlashCommand CodeCompanion.SlashCommand
   ---@return nil
   default = function(SlashCommand)
-    print("[resume] Default provider called")
     local Chat = SlashCommand.Chat
     local sessions = Chat.acp_connection:session_list({
       max_sessions = (SlashCommand.config.opts and SlashCommand.config.opts.max_sessions) or 500,
@@ -129,7 +128,6 @@ local providers = {
   ---@param SlashCommand CodeCompanion.SlashCommand
   ---@return nil
   snacks = function(SlashCommand)
-    print("[resume] Snacks provider called")
     local Chat = SlashCommand.Chat
     local sessions = Chat.acp_connection:session_list({
       max_sessions = (SlashCommand.config.opts and SlashCommand.config.opts.max_sessions) or 500,
@@ -139,20 +137,11 @@ local providers = {
       return utils.notify("No previous sessions found", vim.log.levels.INFO)
     end
 
-    -- Log the raw session data for debugging
-    print("[resume] First session keys: " .. vim.inspect(vim.tbl_keys(sessions[1] or {})))
-    if sessions[1] and sessions[1]._meta then
-      print("[resume] _meta: " .. vim.inspect(sessions[1]._meta))
-    else
-      print("[resume] No _meta on first session")
-    end
-
     -- Build a preview text for a session showing its conversation contents
     local function session_preview(session)
       -- If the adapter provides a history file path via _meta, read it directly
       if session._meta and session._meta.historyJsonlPath then
         local path = session._meta.historyJsonlPath
-        print("[resume] Reading: " .. path)
         local ok, raw = pcall(function()
           local f = io.open(path, "r")
           if not f then
@@ -163,7 +152,6 @@ local providers = {
           return content
         end)
         if ok and raw then
-          print("[resume] File read OK, " .. #raw .. " bytes")
           local lines = {}
           local line_count = 0
           for line in raw:gmatch("[^\n]+") do
@@ -187,15 +175,10 @@ local providers = {
               table.insert(lines, "")
             end
           end
-          print("[resume] Preview has " .. #lines .. " lines")
           if #lines > 0 then
             return table.concat(lines, "\n")
           end
-        else
-          print("[resume] File read FAILED: " .. tostring(raw))
         end
-      else
-        print("[resume] No historyJsonlPath for session " .. session.sessionId)
       end
 
       -- Fallback: metadata-only preview
@@ -252,7 +235,6 @@ local providers = {
 ---@param SlashCommands CodeCompanion.SlashCommands
 ---@return nil
 function SlashCommand:execute(SlashCommands)
-  print("[resume] execute() called")
   local Chat = self.Chat
 
   if Chat.cycle > 1 then
