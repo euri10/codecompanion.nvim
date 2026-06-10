@@ -429,15 +429,9 @@ function ACPHandler:handle_usage_update(update)
     usage_text = string.format("%s, $%.2f %s", usage_text, update.cost.amount, update.cost.currency)
   end
 
-  -- Prefix with a newline to ensure the usage line is always visually separated
-  -- from the preceding message when it follows content of the same type
-  local content = usage_text
-  if self.chat.builder
-    and self.chat.builder.state
-    and self.chat.builder.state.last_type == self.chat.MESSAGE_TYPES.LLM_MESSAGE
-  then
-    content = "\n" .. content
-  end
+  -- Wrap the usage text so it stays on its own line even when the stream keeps
+  -- emitting more assistant content after the update.
+  local content = string.format("\n%s\n", usage_text)
 
   self.chat:add_buf_message(
     { role = config.constants.LLM_ROLE, content = content },

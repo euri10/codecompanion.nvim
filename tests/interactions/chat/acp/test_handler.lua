@@ -196,6 +196,44 @@ T["ACPHandler"]["suppresses thought chunks when show_reasoning is false"] = func
   h.eq(2, result.reasoning_collected)
 end
 
+T["ACPHandler"]["wraps usage updates on their own line"] = function()
+  local result = child.lua([[
+    local chat = h.setup_chat_buffer({}, {
+      name = "test_acp",
+      config = {
+        name = "test_acp",
+        type = "acp",
+        handlers = { form_messages = function(a, m) return m end }
+      }
+    })
+
+    local ACPHandler = require("codecompanion.interactions.chat.acp.handler")
+    local handler = ACPHandler.new(chat)
+
+    local buffer_messages = {}
+    chat.add_buf_message = function(self, data, opts)
+      table.insert(buffer_messages, { data = data, opts = opts })
+    end
+
+    handler:handle_usage_update({
+      sessionUpdate = "usage_update",
+      used = 20447,
+      size = 258400,
+      cost = { amount = 12.34, currency = "USD" },
+    })
+
+    return {
+      message_count = #buffer_messages,
+      content = buffer_messages[1].data.content,
+      message_type = buffer_messages[1].opts.type,
+    }
+  ]])
+
+  h.eq(1, result.message_count)
+  h.eq("\n👄 20447/258400 tokens, $12.34 USD\n", result.content)
+  h.eq("llm_message", result.message_type)
+end
+
 T["ACPHandler"]["coordinates completion flow"] = function()
   local result = child.lua([[
     local chat = h.setup_chat_buffer({}, {
