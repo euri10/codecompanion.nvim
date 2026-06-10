@@ -12,6 +12,7 @@ local watch = require("codecompanion.interactions.shared.watch")
 ---@field reasoning table Reasoning output from the Agent
 ---@field tools table<string, table> Cache of tool calls by their ID
 ---@field ui_state table<string, table> Cache of tool call UI states (line_number, icon_id) by tool call ID
+---@field usage table|nil Latest usage update with token and cost info
 ---@field _permission { queue: CodeCompanion.Queue, active: boolean, respond: function|nil } Internal state for managing permission requests
 local ACPHandler = {}
 
@@ -24,6 +25,7 @@ function ACPHandler.new(chat)
     reasoning = {},
     tools = {},
     ui_state = {},
+    usage = nil,
     _permission = {
       active = false,
       queue = Queue.new(),
@@ -201,6 +203,9 @@ function ACPHandler:create_and_send_prompt(payload)
     end)
     :on_cancel(function()
       self:_clear_permission_queue()
+    end)
+    :on_usage_update(function(update)
+      self:handle_usage_update(update)
     end)
     :with_options({ bufnr = self.chat.bufnr, interaction = "chat" })
     :send()
@@ -409,6 +414,24 @@ function ACPHandler:handle_error(error)
   )
 
   self.chat:done(self.output)
+end
+
+---Handle usage update notification
+---@param update { sessionUpdate: string, used: number, size: number, cost?: {amount: number, currency: string} }
+---@return nil
+function ACPHandler:handle_usage_update(update)
+  self.usage = update
+  log:debug("[ACP::Handler] Usage update: used=%d/%d tokens", update.used, update.size)
+
+  local usage_text = string.format("used %d/%d tokens", update.used, update.size)
+  if update.cost then
+    usage_text = string.format("%s, $%.2f %s", usage_text, update.cost.amount, update.cost.currency)
+  end
+
+  self.chat:add_buf_message(
+    { role = config.constants.LLM_ROLE, content = usage_text },
+    { type = self.chat.MESSAGE_TYPES.LLM_MESSAGE }
+  )
 end
 
 return ACPHandler
