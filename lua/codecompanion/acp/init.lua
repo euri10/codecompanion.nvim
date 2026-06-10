@@ -851,8 +851,8 @@ function Connection:handle_usage_update(session_id, update)
   log:debug("[acp] Usage update: used=%d/%d tokens", update.used, update.size)
 
   -- Pass to active prompt so chat can display usage info
-  if self._active_prompt and self._active_prompt.handle_usage_update then
-    self._active_prompt:handle_usage_update(update)
+  if self._active_prompt then
+    self._active_prompt:handle_session_update(update)
   end
 end
 
