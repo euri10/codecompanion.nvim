@@ -502,6 +502,7 @@ return {
         buffer_sync_diff = " ",
         tool_success = "!! ",
         tool_failure = "xx ",
+        usage = "󰙅 ",
       },
       show_context = true,
       fold_context = false,

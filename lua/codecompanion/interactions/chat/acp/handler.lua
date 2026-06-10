@@ -423,13 +423,24 @@ function ACPHandler:handle_usage_update(update)
   self.usage = update
   log:debug("[ACP::Handler] Usage update: used=%d/%d tokens", update.used, update.size)
 
-  local usage_text = string.format("used %d/%d tokens", update.used, update.size)
+  local icon = config.display.chat.icons.usage or "󰙅 "
+  local usage_text = string.format("%s%d/%d tokens", icon, update.used, update.size)
   if update.cost then
     usage_text = string.format("%s, $%.2f %s", usage_text, update.cost.amount, update.cost.currency)
   end
 
+  -- Prefix with a newline to ensure the usage line is always visually separated
+  -- from the preceding message when it follows content of the same type
+  local content = usage_text
+  if self.chat.builder
+    and self.chat.builder.state
+    and self.chat.builder.state.last_type == self.chat.MESSAGE_TYPES.LLM_MESSAGE
+  then
+    content = "\n" .. content
+  end
+
   self.chat:add_buf_message(
-    { role = config.constants.LLM_ROLE, content = usage_text },
+    { role = config.constants.LLM_ROLE, content = content },
     { type = self.chat.MESSAGE_TYPES.LLM_MESSAGE }
   )
 end
