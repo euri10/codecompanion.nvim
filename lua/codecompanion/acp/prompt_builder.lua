@@ -74,6 +74,10 @@ function PromptBuilder:on_cancel(fn)
   self.handlers.cancel = fn
   return self
 end
+function PromptBuilder:on_usage_update(fn)
+  self.handlers.usage_update = fn
+  return self
+end
 function PromptBuilder:with_options(opts)
   self.options = vim.tbl_extend("force", self.options, opts or {})
   return self
@@ -194,6 +198,10 @@ function PromptBuilder:handle_session_update(params)
   elseif params.sessionUpdate == "tool_call_update" then
     if self.handlers.tool_update then
       self.handlers.tool_update(params)
+    end
+  elseif params.sessionUpdate == "usage_update" then
+    if self.handlers.usage_update then
+      self.handlers.usage_update(params)
     end
   end
 end

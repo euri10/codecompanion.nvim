@@ -628,6 +628,8 @@ local DISPATCH = {
       self:handle_config_option_update(m.params.sessionId, m.params.update.configOptions)
     elseif m.params.update and m.params.update.sessionUpdate == "session_info_update" then
       self:handle_session_info_update(m.params.sessionId, m.params.update)
+    elseif m.params.update and m.params.update.sessionUpdate == "usage_update" then
+      self:handle_usage_update(m.params.sessionId, m.params.update)
     elseif self._loading_session and self._on_session_update then
       self._on_session_update(m.params.update)
     elseif self._active_prompt then
@@ -833,6 +835,24 @@ function Connection:handle_session_info_update(session_id, update)
         chat:set_title(update.title)
       end
     end
+  end
+end
+
+---Handle usage_update notification
+---@param session_id string
+---@param update { sessionUpdate: string, used: number, size: number, cost?: {amount: number, currency: string} }
+---@return nil
+function Connection:handle_usage_update(session_id, update)
+  --Ref: https://agentclientprotocol.com/rfds/session-usage
+  if not session_id or session_id ~= self.session_id then
+    return
+  end
+
+  log:debug("[acp] Usage update: used=%d/%d tokens", update.used, update.size)
+
+  -- Pass to active prompt so chat can display usage info
+  if self._active_prompt and self._active_prompt.handle_usage_update then
+    self._active_prompt:handle_usage_update(update)
   end
 end
 
